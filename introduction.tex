@@ -1,0 +1,13 @@
+\section{Introduction}
+\label{sec:introduction}
+
+For the purpose of this report, we focus on analysing the Open Source application framework entitled Apache MINA. Apache MINA (Multipurpose Infrastructure for Network Applications) \cite{mina-website} is a network application framework written in Java. Its main selling point is that it facilitates the creation of high performance and scalable network applications. The core element of MINA is the abstract, event-driven, asynchronus API it provides which facilitates the implementation of several transport protocol suites such as TCP/IP or UDP/IP via Java NIO \cite{oracle-nio}. Therefore, MINA is often referred to as a NIO framework library, networking socket library or client server framework library.
+
+\subsection{Community and background}
+Apache MINA was created in 2004 through the joint effort and ideas of Trustin Lee and Alex Karasulu, based on its predecessor Netty2\footnote{Currently Netty exists as an independent Java client-server framework \cite{netty}.}. According to the GitHub repository of the MINA project \cite{mina-github}, there are 18 active contributors; the project sums up a total of 46,461 lines of code. There are a total of 60 official releases, the latest stable ones being 2.0.21 and 2.1.3. For the purpose of this report, we will focus mainly on version 2.1.3. Apart from GitHub, the MINA community uses Jira issue tracking \cite{mina-jira} and mailing lists for both users (i.e. users-subscribe@mina.apache.org) and developers (i.e. dev-subscribe@mina.apache.org). 
+
+\subsection{Goals of the report}
+%% this needs to be updated as we extend the document
+The core motivation of this report is to analyse the rationale behind using design patterns in an Open Source project such as Apache MINA. Our main focus is to identify design patterns (or the lack there of) in the codebase and research the motivation of the developers for introducing or removing the corresponding patterns.
+
+The first steps undertaken for this purpose are to identify the core requirements of MINA (see section \ref{sec:analysis_requirements}) and understand the Open Source document from an architectural stand point (see section \ref{sec:analysis_components}).

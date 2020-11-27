@@ -1,0 +1,127 @@
+\documentclass[a4paper, 10pt]{article}
+\usepackage{a4wide}
+\usepackage[utf8]{inputenc}
+\usepackage{cmap} % Allow more characters in the source directly
+\usepackage[english]{babel}
+\usepackage{parskip} % To prevent indentation of new paragraphs
+\usepackage{lmodern} % Modern font with a.o. euro symbols included
+\usepackage[T1]{fontenc} % Fix font encoding in the document to improve the layout
+\usepackage{csquotes}
+\usepackage{authblk}
+
+% Text layout packages
+\usepackage{hyperref} % Hyperlinks
+\usepackage{color} % For colors
+\usepackage{xcolor} % For colors
+\usepackage[inline]{enumitem} % For lists, possibly inline
+
+% Figures & References packages
+\usepackage[labelfont=bf]{caption} \captionsetup{width=0.8\textwidth, font=small} % For captions
+\usepackage{subcaption} % For more advanced captions, such as figure 1a, b, c
+\usepackage{graphicx} % Include more types of images
+\usepackage[style=numeric,citestyle=numeric-comp,natbib=true,sorting=none]{biblatex}
+\addbibresource{references.bib}
+
+% Table packages
+\usepackage{booktabs} % Used for lines in tables
+\usepackage{float}
+\usepackage{xltabular}
+\usepackage{multirow} % For row-spans besides column-spans
+\usepackage{tabularx} % For tables with automatically expanding columns
+\usepackage[column=C]{cellspace} \addparagraphcolumntypes{X}
+\usepackage{siunitx} \sisetup{load-configurations = abbreviations, separate-uncertainty=true, exponent-product=\cdot, output-product=\cdot} % Formatting numbers
+
+% Fix normal tabular booktabs
+\AtBeginEnvironment{tabular}{\let\xltabular\undefined}
+\AtBeginEnvironment{tabularx}{\let\xltabular\undefined}
+
+% Make italics numbers possible in siunitx columns
+\robustify\itshape
+\robustify\bf
+\robustify\bfseries
+\sisetup{detect-all=true}
+
+% Fix link display
+\hypersetup{colorlinks=false,linkbordercolor=gray!30!white,pdfborderstyle={/S/U/W 1}}
+
+% Define some macros
+\makeatletter
+\newcommand{\source}{\@ifstar\@@source\@source}
+\newcommand{\@source}[2]{\textsc{Source:} {\it ``#1''} #2}
+\newcommand{\@@source}[1]{\textsc{Source:} #1}
+\makeatother
+
+\usepackage[toc,page]{appendix}
+
+
+\begin{document}
+
+\begin{titlepage}
+\addtolength{\hoffset}{0cm}
+	\centering
+	\includegraphics[width=\textwidth]{images/rug_logo.jpg}
+	\par\vspace{0.5cm}
+    \textbf{Faculty of Science and Engineering - University of Groningen}\\
+    % \textbf{Department of Computing Science}\\
+    \vspace{1cm}
+	{\scshape\LARGE Software Maintenance \& Evolution \par}
+	\vspace{0.5cm}
+	
+	\noindent\makebox[\textwidth]{\rule{\textwidth}{0.4pt}}
+ 	{\huge\bfseries Design Patterns in \textsc{Apache MINA}  \par }
+
+	\noindent\makebox[\textwidth]{\rule{\textwidth}{0.4pt}}
+	 	{\large\bfseries Exploring the rationale of introducing and removing design patterns in \textsc{Apache MINA}  \par}
+	 	
+    \vspace{0.5cm}
+    \includegraphics[width=0.3\textwidth]{images/mina_logo.png}
+	\par\vspace{0.5cm}	 	
+	 
+	
+% 	\vspace{1.5cm}
+	
+	{\itshape Authors:}  \par
+	 
+	 Alina \textsc{Matei} 
+	\vspace{0.1cm}\\
+	  Floris \textsc{Westerman} 
+
+		
+    \vspace{1cm}
+	{\itshape Coordinator:} \par
+	Dr. Mohamed \textsc{Soliman}
+	\vspace{0.5cm}\\
+	{\itshape Teaching assistant:} \par
+	Filipe \textsc{Capela}
+	
+	
+    \vfill
+
+% Bottom of the page
+	{\large \today\par}
+\end{titlepage}
+\newpage
+\tableofcontents
+\newpage
+
+\input{introduction}
+\newpage
+\input{analysis_requirements}
+\newpage
+\input{analysis_architecture}
+
+\newpage
+\addcontentsline{toc}{section}{References}
+{
+\setlength{\bibitemsep}{.7\baselineskip}
+\printbibliography
+}
+\newpage
+
+\begin{appendices}
+\input{figures}
+\newpage
+\input{changelog}
+\end{appendices}
+
+\end{document}
