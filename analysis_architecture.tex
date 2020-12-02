@@ -79,11 +79,11 @@ Other remarks regarding the high-level architecture related to the proposed rest
     \item \texttt{mina-core-core}: main component of the module, follows the architecture presented in figure \ref{fig:architecture}; it comprises of the crucial components which provide the core functionality of the MINA framework, each components is described in detail in terms of their responsibilities.
         \begin{enumerate}
             \item \texttt{mina-core-core-service}: the most important part of the MINA architecture, it provides crucial IO services and manages the communication sessions with the remote peers. The main responsibilities are managing communication  (i.e. transmits data both ways reads \& writes), listening for \texttt{IOEvent}s, managing \texttt{IOSession}s (creation and deletion, detecting idleness), invoking the \texttt{IOHandler} upon certain events (e.g. messaged received), managing filter chain creation. The \texttt{IOService} interface is implemented by two core classes which provide the desired client-server implementation supported by the framework: \texttt{IOAcceptor}, the server side, and \texttt{IOConnector}, the client side. An overview of all the responsibilities of this module is shown in figure \ref{fig:service_responisbilities}, in the Appendix.
-            \item \texttt{mina-core-core-session}: an \texttt{IOSession} represents a client-server connection (i.e. whenever a client connection is established, a new session is created); a session has a \texttt{IOSessionConfig} (e.g. sending/receiving buffer size, idle time etc.) and some user set \texttt{IOSessionAttribute}s (i.e. user defined data that must be persist during the session life-time, this is store in a dedicated \texttt{IOSessionDataStruct} for each session). The \texttt{SessionState} represents the state of the session (see figure \ref{fig:session_lifecycle} in the Appendix). Each session is correlated with a filter chain, all in-going or out-going data is processed  by the chain; moreover, the session is associated with an \textt{IOHandler} which is the communication point with the actual application (it implements the business logic based on the messages/events received). The handler will dispatch the messages received from the session, as well as responding by requesting writes in return. The session handles read/write requests via the \texttt{IOProcessor} which performs the actual IO.
+            \item \texttt{mina-core-core-session}: an \texttt{IOSession} represents a client-server connection (i.e. whenever a client connection is established, a new session is created); a session has a \texttt{IOSessionConfig} (e.g. sending/receiving buffer size, idle time etc.) and some user set \texttt{IOSessionAttribute}s (i.e. user defined data that must be persist during the session life-time, this is store in a dedicated \texttt{IOSessionDataStruct} for each session). The \texttt{SessionState} represents the state of the session (see figure \ref{fig:session_lifecycle} in the Appendix). Each session is correlated with a filter chain, all in-going or out-going data is processed  by the chain; moreover, the session is associated with an \texttt{IOHandler} which is the communication point with the actual application (it implements the business logic based on the messages/events received). The handler will dispatch the messages received from the session, as well as responding by requesting writes in return. The session handles read/write requests via the \texttt{IOProcessor} which performs the actual IO.
             \item \texttt{mina-core-core-IOEvent}: defines an \texttt{IOEvent}, their types and filter events.
             \item \texttt{mina-core-core-IOFilter}: basic implementation of the \texttt{IOFilter} and \texttt{IOFilterChains}; using the \textit{Adapter} pattern, supports the creation of individual filters or chained filters using a customizable chain filter builder; a filter chain filters all IO events and requests between \texttt{IOService} and \texttt{IOHandler}.
         \end{enumerate}
-    \item \texttt{mina-core-proxy}: while \textt{mina-core-core} provides the resources for implementing client-server applications, it provides the support for writing a MINA based proxy server; the proxy module follows the same architecture, providing specific proxy functionality for handlers, filters and sessions which complement the core \textt{IOService}.
+    \item \texttt{mina-core-proxy}: while \texttt{mina-core-core} provides the resources for implementing client-server applications, it provides the support for writing a MINA based proxy server; the proxy module follows the same architecture, providing specific proxy functionality for handlers, filters and sessions which complement the core \texttt{IOService}.
     \item \texttt{mina-core-transport}: offers support for several transport types for MINA based applications
         \begin{enumerate}
             \item \texttt{mina-core-transport-socket}: TCP \& UDP implement based on NIO Java API, extended with support for active polling strategies (e.g. NIO select call strategy)
@@ -116,8 +116,8 @@ Other remarks regarding the high-level architecture related to the proposed rest
     \item \texttt{mina-integration-beans}: supports integration of JavaBeans; it implements the \texttt{PropertyEditor} class in order to create convertor classes which transform string objects into various other predefined Java classes (e.g. strings to sets, strings to patterns, strings to files).
     \item \texttt{mina-integration-ognl}: supports integration with the OGNL (Object-Graph Navigation Language) for tasks like finding \texttt{IOSession}s that match a certain OGNL expression or defining OGNL property accessors for IO filters, services and sessions.
     \item \texttt{mine-integration-xbean}: miscellaneous classes mainly adapting the JavaBeans integration with the rest of MINA. 
-    \item \texttt{mina-integration-jmx}: supports integration with JMX (Java Management Extensions); it offers the possibility to manage \texttt{IOService}s and \textt{IOSession}s. As per figure \ref{fig:dependencies_integration} in the Appendix, the JMX integration it relies on the achieved integrations described above.
-\end{enumerate}\\
+    \item \texttt{mina-integration-jmx}: supports integration with JMX (Java Management Extensions); it offers the possibility to manage \texttt{IOService}s and \texttt{IOSession}s. As per figure \ref{fig:dependencies_integration} in the Appendix, the JMX integration it relies on the achieved integrations described above.
+\end{enumerate}
 \textsc{Identified patterns}: None, possibly a Factory pattern.
 
 \subsubsection{MINA state machine}
@@ -183,14 +183,12 @@ We present the use case of creating a MINA based server. Even though it is a rat
 The core requirement of a server is to accept client connections. This implies that a mechanism for listening to incoming, possible connections is required. This mechanism is dependent on the type of communication between the server and the clients. MINA offers two main possibilities here: either TCP/IP or UDP/IP.\\\\
 In this example, we construct a TCP/IP server. We include an \texttt{IOAcceptor} which listens for connections over a \texttt{SocketAcceptor} and is bound to a user defined port:
 
-\begin{verbatim}
-    IOAcceptor connectionsAcceptor = new NIOSocketAcceptor();
-    // bind the acceptor to a port of value PORT
-    connectionsAcceptor.bind( new InetSocketAddress(PORT));
-\end{verbatim}
-
-This also implies a connection between the \texttt{transport} and the \texttt{service} packages (see figure \ref{fig:step1}):
-
+\begin{javashort}
+IOAcceptor connectionsAcceptor = new NIOSocketAcceptor();
+// bind the acceptor to a port of value PORT
+connectionsAcceptor.bind(new InetSocketAddress(PORT));
+\end{javashort}
+This also implies a connection between the \texttt{transport} and the \texttt{service} packages (see figure %\ref{fig:step1}): /// FIGURE NOT INCLUDED
 
 % \begin{figure}
 %     \centering
@@ -203,10 +201,10 @@ This also implies a connection between the \texttt{transport} and the \texttt{se
 The following step is to define a handler, an instance which will react to the communication events between the clients and our server. The responsibility of the handler is to implement the user defined business logic: what actions should be taken when a client connects to the server? or when a message is received?\\\\
 The handler needs to be added to the \texttt{connectionsAcceptor}; it will be an user-defined implementation of the \texttt{IOHandlerAdapter} class:
 
-\begin{verbatim}
-    // serverHandler extends IOHandlerAdapter
-    connectionsAcceptor.setHandler(new serverHandler());
-\end{verbatim}
+\begin{javashort}
+// serverHandler extends IOHandlerAdapter
+connectionsAcceptor.setHandler(new serverHandler());
+\end{javashort}
 
 This establishes a connection between packages \texttt{IOAcceptor} and \texttt{IOHandler} via the \texttt{IOHandler} interface.
 
@@ -214,29 +212,27 @@ This establishes a connection between packages \texttt{IOAcceptor} and \texttt{I
 Since the server deals with IO communication, MINA offers the possibility of applying filters on the client connections and, therefore, on the inflow/outflow of data. Filters can be chained to obtain the functionality desired by the user.\\\\
 Each \texttt{IOAdapter} has a predefined \texttt{DefaultFilterChainBuilder} which creates a corresponding \texttt{FilterChain}; this allows the user to easily add various types of filters to the chain:
 
-\begin{verbatim}
-    // adds a new logging filter as the last element of the filter chain
-    connectionsAcceptor.getFilterChain().addLast("logging filter", new LoggingFilter());
-    /* adds a encoder/decoder protocol filter which transforms message objects 
-    *into specific data types
-    *TextLineCodecFactory handles text based messages 
-    */
-    connectionsAcceptor.getFilterChain().addLast("text codec", 
-    new ProtocolCodecFilter(new TextLineCodecFactory( Charset.forName( "UTF-8"))));
-\end{verbatim}
+\begin{javashort}
+// adds a new logging filter as the last element of the filter chain
+connectionsAcceptor.getFilterChain().addLast("logging filter", new LoggingFilter());
+
+// adds a encoder/decoder protocol filter which transforms message objects into specific data types
+// TextLineCodecFactory handles text-based messages 
+connectionsAcceptor.getFilterChain().addLast("text codec", new ProtocolCodecFilter(new TextLineCodecFactory(Charset.forName("UTF-8"))));
+\end{javashort}
 
 In this manner, the \texttt{IOService} package is also related to the \texttt{IOFilter} component, which in turn is related to the \texttt{IOFilterTypes} package.
 
 \underline{\textsc{Step 4}}:\\
 Whenever a client connection is established with the server, a new session is created by default (more accurately, it becomes active). The acceptor's responsibility is to create and manage this session correspondingly, as well as to notify the handler of the events occurring during the session. This process is part of the inner workings of MINA.\\\\
-The user, however, has the option to configure the \textt{IOSession} according to their specifications:
+The user, however, has the option to configure the \texttt{IOSession} according to their specifications:
 
-\begin{verbatim}
-    // sets the IO buffer size to SIZE
-    connectionsAcceptor.getSessionConfig().setReadBufferSize(SIZE);
-    // determine acceptable idle time of the connection
-    connectionsAcceptor.getSessionConfig().setIdleTime(IdleStatus.BOTH_IDLE, 10);
-\end{verbatim}
+\begin{javashort}
+// sets the IO buffer size to SIZE
+connectionsAcceptor.getSessionConfig().setReadBufferSize(SIZE);
+// determine acceptable idle time of the connection
+connectionsAcceptor.getSessionConfig().setIdleTime(IdleStatus.BOTH_IDLE, 10);
+\end{javashort}
 
 This directly connects the \texttt{service} and the \texttt{session} packages.
 

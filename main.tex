@@ -1,19 +1,21 @@
 \documentclass[a4paper, 10pt]{article}
 \usepackage{a4wide}
-\usepackage[utf8]{inputenc}
-\usepackage{cmap} % Allow more characters in the source directly
+\usepackage[utf8]{luainputenc}
 \usepackage[english]{babel}
 \usepackage{parskip} % To prevent indentation of new paragraphs
 \usepackage{lmodern} % Modern font with a.o. euro symbols included
 \usepackage[T1]{fontenc} % Fix font encoding in the document to improve the layout
-\usepackage{csquotes}
 \usepackage{authblk}
+\usepackage[toc,page]{appendix}
+\usepackage{pdflscape}
 
 % Text layout packages
 \usepackage{hyperref} % Hyperlinks
 \usepackage{color} % For colors
 \usepackage{xcolor} % For colors
 \usepackage[inline]{enumitem} % For lists, possibly inline
+\usepackage{fontspec} % For custom fonts
+\usepackage{microtype} % For better text appearance
 
 % Figures & References packages
 \usepackage[labelfont=bf]{caption} \captionsetup{width=0.8\textwidth, font=small} % For captions
@@ -29,7 +31,13 @@
 \usepackage{multirow} % For row-spans besides column-spans
 \usepackage{tabularx} % For tables with automatically expanding columns
 \usepackage[column=C]{cellspace} \addparagraphcolumntypes{X}
+
+%\usepackage{floatrow}
 \usepackage{siunitx} \sisetup{load-configurations = abbreviations, separate-uncertainty=true, exponent-product=\cdot, output-product=\cdot} % Formatting numbers
+\usepackage{listings} % For code listings
+\usepackage{minted} % For code coloring (requires color)
+
+\usepackage{csquotes}
 
 % Fix normal tabular booktabs
 \AtBeginEnvironment{tabular}{\let\xltabular\undefined}
@@ -44,15 +52,49 @@
 % Fix link display
 \hypersetup{colorlinks=false,linkbordercolor=gray!30!white,pdfborderstyle={/S/U/W 1}}
 
+% Add Code style definitions
+% Code style definitions
+\definecolor{Gray}{gray}{0.95}
+
+%\setsansfont{Segoe UI}
+\newfontfamily{\cascadia}{Cascadia Mono}[NFSSFamily=Cascadia]
+\renewcommand{\theFancyVerbLine}{\sffamily\textcolor[rgb]{0.5,0.5,0.5}{\scriptsize\arabic{FancyVerbLine}}}
+\usemintedstyle{vs}
+\renewcommand{\listingscaption}{Code sample}
+
+\newmintinline[java]{Java}{
+	mathescape,
+	tabsize = 4
+}
+
+\newminted[javashort]{Java}{
+	tabsize = 4,
+	breaklines,
+	breakautoindent = true,
+	bgcolor = white,
+	fontfamily = Cascadia,
+	fontsize = \fontsize{8pt}{12pt}
+}
+
+\newminted[javalong]{Java}{
+	linenos,
+	frame = lines,
+	framesep = 3mm,
+	breaklines,
+	breakautoindent = true,
+	fontsize = \fontsize{8pt}{10.5pt},
+	tabsize = 4,
+	bgcolor = white,
+	mathescape = true,
+	texcomments = true
+}
+
 % Define some macros
 \makeatletter
 \newcommand{\source}{\@ifstar\@@source\@source}
 \newcommand{\@source}[2]{\textsc{Source:} {\it ``#1''} #2}
 \newcommand{\@@source}[1]{\textsc{Source:} #1}
 \makeatother
-
-\usepackage[toc,page]{appendix}
-\usepackage{pdflscape}
 
 
 \begin{document}
