@@ -67,9 +67,10 @@ Other remarks regarding the high-level architecture related to the proposed rest
 
 \subsection{Component analysis}
 \label{sec:component_analysis}
+This section treats the analysis of the architectural components that build up the MINA framework. This analysis has been conducted through a bottom-up approach: we started by investigating the code base of MINA \cite{mina-github} and its corresponding API documentation \cite{mina-reference} in order to infer the responsibility of each component and grasp their interactions; where the information was available, we validated the conclusions of the bottom-up analysis with the official MINA documentation \cite{mina-docs}. 
 \subsubsection{MINA core}
 \textsc{Initial structure}: Appendix, figures \ref{fig:mina_core_initial}, \ref{fig:mina_core_initial_detailed}, \ref{fig:mina_core_core_initial}.  \\
-\textsc{Issues and restructuring}: In the initial dependency diagram (i.e. figure \ref{fig:mina_core_dependencies_initial} in the Appendix), cyclic dependencies are marked in red. With the restructuring, we attempted to overcome this problem. However, the nature of the code did not allow for this dependencies to be eliminated. We have, nonetheless, isolated the tangles and reduced the `tangle percentage' from 75\% to 45\%. Diagrams after restructuring are presented in the Appendix, figures \ref{fig:mina_core_restructured}, \ref{fig:mina_core_core_restructured}.\\
+\textsc{Issues and restructuring}: In the initial dependency diagram (i.e. figure \ref{fig:mina_core_dependencies_initial} in the Appendix), cyclic dependencies are marked in red. With the restructuring, we attempted to overcome this problem. However, the nature of the code did not allow for this dependencies to be eliminated. We have, nonetheless, isolated the tangles and reduced the `tangle percentage' from 75\% to 46\% (see figure \ref{fig:tangles} in the Appendix). Diagrams after restructuring are presented in the Appendix, figures \ref{fig:mina_core_restructured}, \ref{fig:mina_core_core_restructured}.\\
 \textsc{Dependencies}: None \\
 \textsc{Dependents}: All the other modules\\
 \textsc{Inner dependencies}: Appendix, figure \ref{fig:mina_core_dependencies_restructured} shows inner dependencies after restructuring.\\
@@ -178,7 +179,7 @@ Other remarks regarding the high-level architecture related to the proposed rest
 
 
 \subsection{Use case analysis: creating a MINA server}
-We present the use case of creating a MINA based server. Even though it is a rather simple use case, it captures the core functionality of MINA as a networking framework. With this use case, we intend to show how the core components of MINA interact with each other in order to obtain the server functionality. Apart from presenting the steps that lead to the successful creation of a MINA server, we also show their implementation; the call graphs of the methods used are listed in the Appendix, section \ref{sec:call_graphs}.\\\\
+We present the use case of creating a MINA based server by following the MINA tutorial presented in \cite{mina-qsguide}. Even though it is a rather simple use case, it captures the core functionality of MINA as a networking framework. With this use case, we intend to show how the core components of MINA interact with each other in order to obtain the server functionality. Apart from presenting the steps that lead to the successful creation of a MINA server, we also show their implementation; the call graphs of the methods used are listed in the Appendix, section \ref{sec:call_graphs}.\\\\
 \underline{\textsc{Step 1}}:\\
 The core requirement of a server is to accept client connections. This implies that a mechanism for listening to incoming, possible connections is required. This mechanism is dependent on the type of communication between the server and the clients. MINA offers two main possibilities here: either TCP/IP or UDP/IP.\\\\
 In this example, we construct a TCP/IP server. We include an \texttt{IOAcceptor} which listens for connections over a \texttt{SocketAcceptor} and is bound to a user defined port:
@@ -188,7 +189,9 @@ IOAcceptor connectionsAcceptor = new NIOSocketAcceptor();
 // bind the acceptor to a port of value PORT
 connectionsAcceptor.bind(new InetSocketAddress(PORT));
 \end{javashort}
-This also implies a connection between the \texttt{transport} and the \texttt{service} packages (see figure %\ref{fig:step1}): /// FIGURE NOT INCLUDED
+This also implies a connection between the \texttt{transport} and the \texttt{service} packages. 
+
+%(see figure %\ref{fig:step1}): /// FIGURE NOT INCLUDED
 
 % \begin{figure}
 %     \centering
@@ -203,9 +206,8 @@ The handler needs to be added to the \texttt{connectionsAcceptor}; it will be an
 
 \begin{javashort}
 // serverHandler extends IOHandlerAdapter
-connectionsAcceptor.setHandler(new serverHandler());
+connectionsAcceptor.setHandler(new ServerHandler());
 \end{javashort}
-
 This establishes a connection between packages \texttt{IOAcceptor} and \texttt{IOHandler} via the \texttt{IOHandler} interface.
 
 \underline{\textsc{Step 3}}:\\
