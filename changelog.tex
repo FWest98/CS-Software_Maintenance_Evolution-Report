@@ -3,31 +3,81 @@
 The following students have contributed to the elaboration of this document:
 \begin{enumerate}
      \item Alina Matei s3080722 (ID: AM)
-    \item Floris Westerman (ID: FW)
+    \item Floris Westerman s2970627 (ID: FW)
 \end{enumerate}
-   
-\begin{table}[H]
-    \centering
-    \begin{tabular}{c|c|c}
-        ID & Date & Task  \\
-        \hline \hline
-        \multicolumn{3}{c}{Week 1 (18/11/2020 - 25/11/2020)}\\
-        \hline
-        AM & 20/11/2020 & Introduction \& sections 2.1, 2.2, 2.3 (draft)\\
-        AM & 21/11/2020 & Sections 2.3, 2.4\\
-        \hline \hline
-        \multicolumn{3}{c}{Week 2 (25/11/2020 - 02/12/2020)}\\
-        \hline
-        AM & 26/11/2020 & Implemented TA feedback\\
-        AM & 27/11/2020 & API docs research \& Structure101 code investigation\\
-        AM & 28/11/2020 & Sections 3.1, 3.2 \\
-        AM & 29/11/2020 & Sections 3.3.1, 3.3.2\\
-        AM & 02/12/2020 & Completed section 3.3 \& 3.4\\
-        \hline \hline
-        \multicolumn{3}{c}{Week 3 (02/12/2020 - 09/12/2020)}\\
-        \hline
-        AM & 07/12/2020 & Implemented TA feedback\\
-    \end{tabular}
-    \caption{Changelog table}
-    \label{tab:changelog}
-\end{table}
+
+% Define some macros for simplifying this
+\NewEnviron{timetracking}{%
+    \renewcommand{\arraystretch}{1}%
+%
+    \newcommand{\week}[2]{%
+        \midrule%
+        \addlinespace%
+        \multicolumn{3}{l}{{\bf Week ##1} (##2)} \tabularnewline%
+        \addlinespace%
+    }%
+%
+    \newcommand{\entry}[2]{%
+        % Print new table row
+        & ##1 & ##2 \tabularnewline%
+    }%
+%
+    \newcommand{\person}[1]{%
+        \midrule%
+        ##1%
+    }
+%
+    \begin{xltabular}{\linewidth}{l l X}%
+    \toprule%
+    \BODY%
+    \bottomrule%
+    \end{xltabular}%
+}
+
+% New timetracking macros for our convenience
+\begin{timetracking}
+% Week 1
+\addlinespace
+\multicolumn{3}{l}{{\bf Week 1} (18/11/2020 - 25/11/2020)} \tabularnewline
+\addlinespace
+\person{AM}
+\entry{20/11/2020}{Introduction \& Sections 2.1-3 (draft)}
+\entry{21/11/2020}{Sections 2.3-4}
+
+\person{FW}
+\entry{19/11/2020}{Analysing Pinot, PACITO}
+\entry{21/11/2020}{Proofreading section 2, building and investigating Mina, running Structure101}
+
+% Week 2
+\week{2}{25/11/2020 - 02/12/2020}
+\person{AM}
+\entry{26/11/2020}{Implemented TA feedback}
+\entry{27/11/2020}{API docs research \& Structure101 code investigation}
+\entry{28/11/2020}{Sections 3.1-2}
+\entry{29/11/2020}{Sections 3.3.1-2}
+\entry{02/12/2020}{Sections 3.3-4}
+
+\person{FW}
+\entry{27/11/2020}{Fixing compilation issues of Pinot, getting it to compile using a modern G++ compiler on Ubuntu 18.04}
+\entry{01/12/2020}{Trying to reproduce previous Pacito runtime results in multiple environments}
+\entry{02/12/2020}{Revising the repository, proofreading and updating the report}
+
+\week{3}{02/12/2020 - 09/12/2020}
+\person{AM}
+\entry{07/12/2020}{Implemented TA feedback}
+
+\person{FW}
+\entry{02/12/2020}{Basics of new Pacito program, managed to run the scaffolding of a runtime environment for Pinot}
+\entry{05/12/2020}{Refactoring and improving Pinot to detect and accept more classes, implementing JNI bridge between Pinot and PACITO}
+\entry{06/12/2020}{Bridge between Java and C++ to bring over pattern results in objects instead of plain text, battling segmentation faults}
+\entry{07/12/2020}{Parallelisation, fixing memory leaks, fixing more segmentation faults}
+\entry{08/12/2020}{Incorporating Maven dependencies into Pacito and Pinot runs, writing report}
+
+\week{4}{09/12/2020 - 16/12/2020}
+\person{AM}
+\entry{----}{----}
+
+\person{FW}
+\entry{14/12/2020}{Fixing race conditions, making API more stable, performance improvements. More refactoring of Pinot. Implementing pattern matching between commits, output to JSON}
+\entry{15/12/2020}{Report, more fixes to Pacito}
+\end{timetracking}

@@ -2,18 +2,19 @@
 This section will describe the improvements and changes made in Pacito, and will also list the difficulties we ran into while testing out the tool and its usability aspects.
 
 \subsection{Integrated Pacito}
-The main development work done so far is the integration of all components (Pinot, shell scripts, tools) into a single Java executable. This single tool has a link to the native C++ code of Pinot, and will receive the pattern results straight into memory. This way, no output parsing is necessary and everything is contained within a single executable. Some features of the new tool:
+The main development work done so far is the integration of all components (Pinot, shell scripts, tools) into a single Java executable. This single tool has a link to the native C++ code of Pinot, and will receive the pattern results straight into memory. This way, no output parsing is necessary and everything is contained within a single executable. The new approach also allows for multithreading and many more features:
 \begin{itemize}
-    \item Multithreading: Pacito supports multithreading with a predefined number of threads. It will distribute the commits to analyse dynamically using a threadpool in Java, and each thread will have its own independent working directory. This provides fully parallel operation, so it is very well scalable. It is possible to fully analyse a branch of Mina in about 15 minutes on 8 cores.
+    \item Multithreading: Pacito supports multithreading with a predefined number of threads. It will distribute the commits to analyse dynamically using a threadpool in Java, and each thread will have its own independent working directory. This provides fully parallel operation, so it is very well scalable. It is possible to fully analyse a branch of Mina in about 10 minutes on 8 cores using 16 threads, without running Maven. This overprovisioning allows more efficient use of CPU capacity while waiting for I/O.
     \item Use of temporary file system: Pacito will copy the source of the application to a separate working directory, preferably on a {\tt tmpfs} mount, so all file I/O will be done in-memory. This provides significant speed-ups.
-    \item User-friendly command-line interface: Pacito as a tool has a nice command-line interface with many options to customise the behaviour
-    \item Native integration with Maven: Pacito will integrate straight with Maven and if necessary modify the {\tt pom.xml} files via the API. This ensures that the resulting package download will always succeed and will yield the largest amount of resolved dependencies possible
+    \item User-friendly command-line interface: Pacito as a tool has a nice command-line interface with many options to customise the behaviour.
+    \item Native integration with Maven: Pacito will integrate straight with Maven and if necessary modify the {\tt pom.xml} files via the API. This ensures that the resulting package download will always succeed and will yield the largest amount of resolved dependencies possible.
     \item Maven cache: Each runner thread will use its own Maven cache, to save time downloading resources for each commit.
-    \item Native integration with Git: Pacito integrates straight with Git via a third-party library, simplifying the management of the git repository
-    \item No Java refactoring necessary: Pacito contains a modified version of Pinot that no longer requires refactoring the source code to analyse
-    \item Docker-ready: Pacito can be run in a Docker container, fully hiding all necessary dependencies for the tool to operate. (not yet provided)
+    \item Native integration with Git: Pacito integrates straight with Git via a third-party library, simplifying the management of the git repository.
+    \item No source file refactoring necessary: Pacito contains a modified version of Pinot that no longer requires refactoring the source code to analyse.
+    \item Docker-ready: Pacito can be run in a Docker container, fully hiding all necessary dependencies for the tool to operate.
     \item Exclude filter: Pacito supports excluding certain directories from the analysis, such as an {\tt examples} directory.
-    \item Cross-commit analysis: The set-up of a single integrated program makes it very easy to make intra-commit analyses of the patterns.
+    \item Cross-commit analysis: The set-up of a single integrated program makes it very easy to make intra-commit analyses of the patterns. The code will match patterns detected in consecutive commits and this way it can make a list of all patterns, including their lifespan (intro and outro commits). This eases the detection of new or removed patterns, simplifying the work for this project.
+    \item JSON output: The new Pacito implemention produces a single JSON file with all pattern information for easy processing.
 \end{itemize}
 
 \subsection{Modified Pinot}
@@ -23,13 +24,13 @@ As mentioned before, Pacito contains a modified version of Pinot, with the follo
     \item Support for annotations: Pinot can now parse annotations, and will ignore them in further analysis.
     \item More lenient with generics: Pinot does not support generics, and this will often cause a cascade of issues where the generic types cannot be resolved. However, by assuming the source code to analyse is correct, it is possible to make Pinot less strict in its analysis to allow for more files analysed
     \item Fewer memory leaks: Pinot has considerably fewer memory leaks
-    \item Redesigned runtime: Pinot has an overhauled public API that better integrates the pattern analysis
+    \item Redesigned runtime: Pinot has an overhauled public API that better integrates the pattern analysis, and makes use of modern C++ features and design principles.
 \end{itemize}
 
 \subsection{Issues encountered}
 During the development of the above features, a number of issues were encountered (very) often, significantly slowing down proper progress and analysis:
 \begin{itemize}
-    \item Segmentation faults: Pinot is an adapted version of an old open-source Java compiler by IBM: Jikes. This compiler works fine and has memory management done reasonably well, but the changes made by the developer of Pinot make everything into a real tangle where very often freed memory is being accessed again, memory is freed twice, object slicing is happening everywhere, vtables are being corrupted, etc. Every run for every commit is different, and this makes it very hard to debug. On top of that, due to the use of the Java integration, valgrind is very slow since the Java Virtual Machine is causing literally millions of unsolvable errors.
+    \item Segmentation faults: Pinot is an adapted version of an old open-source Java compiler by IBM: Jikes. This compiler works fine and has memory management done reasonably well, but the changes made by the developer of Pinot make everything into a real tangle where very often freed memory is being accessed again, memory is freed twice, object slicing is happening very often, vtables are being corrupted, etc. Every run for every commit is different, and this makes it very hard to debug. On top of that, due to the use of the Java integration, valgrind is very slow since the Java Virtual Machine is causing literally millions of irrelevant errors.
     
     This all makes the program very hard to debug, especially if you want to keep the memory leaks under control. Over time, we managed to reduce the leak from 20MB per commit to about 300kB, which is much more acceptable.
     
@@ -40,4 +41,6 @@ During the development of the above features, a number of issues were encountere
     \item Pinot not accepting input files. As mentioned before, Pinot is based on the Jikes compiler for which development was discontinued partly through the introduction of JDK5. Consequently, some of the features of JDK5 are implemented, some are not. Luckily, annotations and foreach constructs were already implemented, and we spent some time modifying Pinot to accept these constructs as well.
     
     Unfortunately, the lack of support for generics was causing a number of issues. The lexer and parser of the compiler did already support generics, so the program would not crash; the program would only not parse the files in question. In practice, this causes over half of the classes to not be detected. We tried to circumvent these restrictions in Pinot/Jikes by attempting some workaround, but none of them worked properly.
+    
+    \item Race conditions: After introducing multithreading, a number of race conditions were uncountered. These mainly revovled around the use of global, static variables to maintain the state of pattern analysis in Pinot. Where possible and easy to do so, these static variables were removed and the code was refactored to make it thread-safe, in other cases the problem was alleviated using {\tt thread\_local} statements so that at least the code is thread-safe. However, this does not solve the fundamental issue of a global state, where consecutive runs of Pinot in the same thread might still cause behaviour changes.
 \end{itemize}
