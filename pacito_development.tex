@@ -1,4 +1,5 @@
 \section{Pacito Development}
+\label{sec:pacito_dev}
 This section will describe the improvements and changes made in Pacito, and will also list the difficulties we ran into while testing out the tool and its usability aspects.
 
 \subsection{Integrated Pacito}
@@ -11,7 +12,7 @@ The main development work done so far is the integration of all components (Pino
     \item Maven cache: Each runner thread will use its own Maven cache, to save time downloading resources for each commit.
     \item Native integration with Git: Pacito integrates straight with Git via a third-party library, simplifying the management of the git repository.
     \item No source file refactoring necessary: Pacito contains a modified version of Pinot that no longer requires refactoring the source code to analyse.
-    \item Docker-ready: Pacito can be run in a Docker container, fully hiding all necessary dependencies for the tool to operate.
+    \item Dockerized: Pacito can be run in a Docker container, fully hiding all necessary dependencies for the tool to operate.
     \item Exclude filter: Pacito supports excluding certain directories from the analysis, such as an {\tt examples} directory.
     \item Cross-commit analysis: The set-up of a single integrated program makes it very easy to make intra-commit analyses of the patterns. The code will match patterns detected in consecutive commits and this way it can make a list of all patterns, including their lifespan (intro and outro commits). This eases the detection of new or removed patterns, simplifying the work for this project.
     \item JSON output: The new Pacito implemention produces a single JSON file with all pattern information for easy processing.
@@ -44,3 +45,166 @@ During the development of the above features, a number of issues were encountere
     
     \item Race conditions: After introducing multithreading, a number of race conditions were uncountered. These mainly revovled around the use of global, static variables to maintain the state of pattern analysis in Pinot. Where possible and easy to do so, these static variables were removed and the code was refactored to make it thread-safe, in other cases the problem was alleviated using {\tt thread\_local} statements so that at least the code is thread-safe. However, this does not solve the fundamental issue of a global state, where consecutive runs of Pinot in the same thread might still cause behaviour changes.
 \end{itemize}
+
+\subsection{Usage Instructions}
+Now follow some usage instructions of the new version of Pacito. There are two ways to run the tool: inside a Docker container (easiest, cross-platform compatible), or native in Linux (more involved setup). Both of these will be discussed. The Docker setup is easiest but is not suitable for debugging and development of the application, and it might be complicated to solve issues, however it will run on every major OS with minimal setup time. The native approach is more convoluted to set up, but is easier to develop and debug. Unfortunately, no pre-built binaries or distributions are provided.
+
+\subsubsection{Docker}
+For use of the Docker approach, the only prerequisites are Git and Docker installed. This includes full support for macOS (in theory, but not tested), Windows (via Docker for Windows), and of course most Linux distributions. After having cloned the repository of the code to analyse, and after downloading the source for Pacito (no binaries provided), follow these steps. Commands are preceded by a folder indicator, {\tt S>} for the directory of the source code to analyse and {\tt P>} for the directory where Pacito is located (specifically, the folder containing the new implementation with a {\tt Dockerfile} in it).
+\begin{enumerate}[label=\bf\arabic*)]
+    \item {\tt P> docker build -t pacito .} \\ This will build the Docker image and compile all code automatically, tagging ({\tt -t}) the resulting image with the name {\tt pacito}.
+    \item {\tt S> docker run --rm -v \$(pwd):/source --tmpfs /wd pacito <OPTIONS>} \\ This will run Pacito on the files in the current directory ({\tt pwd}) with the given options. Without specifying options, the help message of Pacito will be displayed, outlining all options. These can also be found below.
+    
+    To explain this command: this command will cause {\tt docker} to {\tt run} the image {\tt pacito} containing our application, with the current working directory mounted in {\tt /source} (this is where Pacito will look for source code inside Docker), and with a temporary filesystem mounted at {\tt /wd}. After finishing, the container instance will automatically be removed ({\tt --rm}).
+\end{enumerate}
+
+\subsubsection{Native}
+The native approach is more involved, mainly because of the larger set of prerequisites:
+\begin{itemize}
+    \item Java 11 - Preferably OpenJDK11 - with a properly set up environment, probably newer versions will work as well
+    \item Gradle 6.x - Future version 7+ might not work
+    \item Maven - Only if the respective integration in Pacito is desired.
+    \item G++ 10 or higher - This version is not yet in most mainline repositories, so this might require setting up extra repositories for your package manager
+    \item Git
+    \item Linux-based operating system - The original Pinot distribution had a configuration API to detect platform-specific features, in the integrated version this is now omitted. This might cause some incompatibilities with specific distributions, expect the best results on Ubuntu distributions.
+\end{itemize}
+
+After having cloned the repository of the code to analyse, and after downloading the source for Pacito (no binaries provided), follow these steps. Commands are preceded by a folder indicator, {\tt S>} for the directory of the source code to analyse and {\tt P>} for the directory where Pacito is located (specifically, the folder containing the new implementation with a {\tt settings.gradle.kts} file in it).
+\begin{enumerate}[label=\bf\arabic*)]
+    \item {\tt P> gradle fatJar} \\ This will first compile the Java code, then build the C++ code with the generated Java headers, and then package everything into a single (fat) jar.
+    \item {\tt S> java -jar <path-to-pacito>/app/build/libs/app.jar --source=. <OPTIONS>} \\ This will run Pacito for the code in the current directory, using all cores, analysing all commits in the currently checked-out branch.
+\end{enumerate}
+
+Alternatively, you could run {\tt P> gradle run} to build and run Pacito directly, but then no single distributable jar is built.
+
+\subsubsection{Runtime Options}
+The interface for Pacito is slightly different depending on whether the program is running inside a Docker container or not. The format of the command line is as follows:\\
+Docker: {\tt docker run <..> pacito <BRANCH> <OPTIONS>} where {\tt BRANCH} is the name of the branch to analyse and is a required parameter\\
+Native: {\tt java -jar <..> --source=<SOURCE> <OPTIONS>} - here the source directory specification is required, and the branch is an optional argument that default to whatever the current branch of the source might be.
+
+Now follows a list of options:
+\begin{description}[font=\tt]
+\item[-s, --source] {\bf (Only native, required)} The directory containing the source code to analyse. On Docker, this is set to {\tt /source} where you will mount the code yourself.
+\item[-b, --branch] {\bf (Only native)} The branch to analyse, defaults to `{\tt\@}' which is the current branch of the source directory
+\item[--start] The name or index of the first commit to analyse, inclusive. Accepts a commit checksum or number. Defaults to the first commit of the specified branch.
+\item[--end] The name or index of the last commit to analyse, inclusive. Accepts a commit checksum or number. Defaults to the most recent commit of the specified branch.
+\item[--exclude] A glob pattern of files/folders to exclude from analyses. For example, an {\tt examples} directory.
+\item[-o, --output] Path of the output file where results are stored. Defaults to {\tt pacito.out} in the source code directory. The path can be absolute (not recommended in Docker), or relative to the source directory.
+\item[-n, --threads] The number of threads to use, defaults to 0 which is to use all available cores.
+\item[-wd, --working-dir] {\bf (Only native)} The working directory of Pacito, defaults to {\tt /tmp}. Recommended to have this folder on an in-memory file system for performance. On Docker, this defaults to {\tt /wd} which you should bind to a {\tt tmpfs}.
+\item[--do-mvn, --no-do-mvn] Whether to include Maven downloads, default to no.
+\item[--mvn] The path to a Maven executable. By default, Pacito looks in PATH.
+\item[-h, --help] Show the help message
+\item[-v] Whether to print verbose output
+\end{description}
+
+\subsection{Implementation details}
+In this section follow some interesting details about the implementation of this version of Pacito.
+
+\subsubsection{Integration Java and C++ code}
+The integration between the Java code inside a JVM (Java Virtual Machine) and native C++ code is not a trivial one. This is accomplished using JNI (Java Native Interface), which allows a developer to use native libraries inside the JVM. JNI allows a developer to mark some methods in a class as {\tt native}, which indicates to the JVM that these are implemented in native code. Upon compilation of the Java code, a C(++) header file will be generated with the exact signatures of the methods to implement in the native code. The implemented code will be compiled to a library, which should then be loaded back into Java.
+
+\begin{javalong}
+public class NativeCode {
+    static {
+        System.loadLibrary("pacito"); // This library will be searched for in the user's include path that is also used by other C(++) programs to load shared lirbaries.
+    }
+    public native void Foo(String input);
+}
+\end{javalong}
+
+The most challenging aspect in this is the conversion between C++ objects and types and the respective Java objects. There is a series of APIs to call in {\tt jni.h} that assist in this, bridging the gap between the JVM and native code, allocating JVM objects on request and vice versa. This even allows C++ code to call Java functions and create Java objects.
+
+\begin{cpplong}
+#include <jni.h>
+
+JNIEXPORT void JNICALL Java_NativeCode_Foo(JNIEnv *env, jobject thisObj, jstring input) {
+    auto cppString = env->GetStringUTFChars(input, 0);
+    /**/
+}
+\end{cpplong}
+
+Another challenge is the preservation of state in the native code. From the perspective of the native code, two calls from the JVM are two independent function calls that are not related to any specific class instance. The best solution to this is to store pointers to any objects that need to be preserved in between calls in the Java class from where the function is called.
+\begin{javalong}
+public class NativeCode {
+    static {...}
+    protected long fooObjPtr;
+    public native void FooInit();
+    public native void FooUse();
+}
+\end{javalong}
+\begin{cpplong}
+#include <jni.h>
+
+jfieldID getPointerField(JNIEnv *env, jobject obj) {
+    auto cls = env->GetObjectClass(obj);
+    if(cls == nullptr) return;
+    
+    auto fieldId = env->GetFieldID(cls, "fooObjPtr", "J"); // "J" is some type representation of a long
+    return fieldId;
+}
+
+template <class T> void setInstance(JNIEnv *env, jobject obj, T *instance) {
+    env->SetLongField(obj, getPointerField(env, obj), (jlong) instance);
+}
+
+template <class T> T* getInstance(JNIEnv *env, jobject obj) {
+    return (T*) env->GetLongField(obj, getPointerField(env, obj));
+}
+
+JNIEXPORT void JNICALL Java_NativeCode_FooInit(JNIEnv *env, jobject thisObj) {
+    auto foo = new Foo();
+    setInstance(env, thisObj, foo);
+}
+
+JNIEXPORT void JNICALL Java_NativeCode_FooUse(JNIEnv *env, jobject thisObj) {
+    auto foo = getInstance<Foo>(env, thisObj);
+}
+\end{cpplong}
+
+Even in this short and simple example, the amount of boilerplate code quickly grows. This is one of the major downsides of using JNI, as every single operation must happen very explicitly. Also refactoring of Java code is a complicated task that quickly breaks many aspects of the integration and must be done with caution.
+
+Another challenge with using JNI is the limited support by various build tools. In our choice to use Gradle, it took quite some time getting both native and Java code properly combined as JNI is not supported out-of-the-box. In the end, a set of custom export configurations and artifacts was used to share the headers from Java to C++ and share the compiled library back from C++ to Java for it to be included in the jar. Typically, the C++ code is shipped as a library with a public interface, and the Java project will contain both all Java code and the C++ integration code (mapping the C++ public interface to Java objects and back). In this case, all code was included in the C++ integration code. This was easier to handle with Gradle, but provides less strict separation of concerns between modules.
+
+\begin{kotlinlong*}{label=\rm Gradle configuration for C++ project to include Java-generated header files}
+// Add JNI Headers configuration for import of the generated headers from Java
+val jniHeaders: Configuration by configurations.creating {
+    isCanBeResolved = true
+    isCanBeConsumed = false // only for import
+    
+    // Selection attributes to select the appropriate artifacts from Java
+    attributes {
+        attribute(Usage.USAGE_ATTRIBUTE, objects.named(Usage.C_PLUS_PLUS_API))
+    }
+    
+    // Define task that processes the header files from Java
+    val jniHeaderTask by tasks.registering(DefaultTask::class) {
+        dependsOn(jniHeaders) // resolves the dependencies before continuing
+        doLast {
+            library.publicHeaders.from(jniHeaders) // add the header files to compilation
+        }
+    }
+    
+    // Indicate that some public headers are built by the processing task
+    library.publicHeaders.builtBy(jniHeaderTask)
+}
+\end{kotlinlong*}
+
+\subsubsection{Conversion of C++ Pattern types to Java alternatives}
+As described above, the interoperability between C++ and Java can be quite cumbersome. For most common operations (creating an object, setting properties of a known type), helper functions were defined that allow for easier programming without risk of introducing bugs.
+
+We want to highlight one conversion in more detail, the conversion of a list of symbols to a list of strings in Java. The issue at hand is that some patterns have a property containing a list of types, list of files, list of variables, etc. In Pinot, these are all subclasses of {\tt Symbol}, such that these are lists of Symbols. Unfortunately, a symbol does not specify some kind of {\tt toString} method, such that it is difficult to write a single helper function that could convert any list of symbols to a list of strings. Instead we had to resort to more exotic templating mechanisms, only recently implemented in G++ version 10.
+
+In this case, we are using concepts to make a generic helper function that allows for conversion of a list of objects to a list of strings, only of those objects have a {\tt ToString} function returning a {\tt const char *}:
+\begin{cpplong}
+template<typename T> concept HasToString = requires(T t) {
+    t.ToString();
+    requires same_as<const char *, decltype(t.ToString())>;
+};
+
+template<HasToString T> std::vector<const char *> symbolVectorToStringVector(std::vector<T*> in) {
+    std::vector<const char *> output;
+    std::transform(in.begin(), in.end(), back_inserter(output), [](auto symbol) { return symbol->ToString(); });
+    return output;
+}
+\end{cpplong}

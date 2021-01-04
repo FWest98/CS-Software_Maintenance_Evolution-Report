@@ -90,6 +90,32 @@
 	texcomments = true
 }
 
+\newminted[cpplong]{C++}{
+	linenos,
+	frame = lines,
+	framesep = 3mm,
+	breaklines,
+	breakautoindent = true,
+	fontsize = \fontsize{8pt}{10.5pt},
+	tabsize = 4,
+	bgcolor = white,
+	mathescape = true,
+	texcomments = true
+}
+
+\newminted[kotlinlong]{Kotlin}{
+	linenos,
+	frame = lines,
+	framesep = 3mm,
+	breaklines,
+	breakautoindent = true,
+	fontsize = \fontsize{8pt}{10.5pt},
+	tabsize = 4,
+	bgcolor = white,
+	mathescape = true,
+	texcomments = true
+}
+
 % Define some macros
 \makeatletter
 \newcommand{\source}{\@ifstar\@@source\@source}
@@ -158,6 +184,8 @@
 
 \newpage
 \input{pacito_development}
+\newpage
+\input{patterns_analysis}
 
 \newpage
 \addcontentsline{toc}{section}{References}
