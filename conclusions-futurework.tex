@@ -1,0 +1,56 @@
+\section{Conclusions}
+\label{sec:conclusion}
+
+In this section, we present our conclusions; we consider the assumptions and preliminary conclusions which arose throughout the pattern analysis (see section \ref{sec:pattern_analysis}) in order to answer the three-fold research question of this report. We organize our conclusions w.r.t. the research sub-questions elaborated in the beginning of section \ref{sec:pattern_analysis}.
+
+\subsection{Why are design patterns introduced?}
+The motivation of introducing design patterns is closely related to the complexity of the context in which the pattern is to be introduced. We saw that most patterns are introduced in the \texttt{mina-core} scope, which represents the back-bone of the MINA system. At the same time, by analysing the correlated commit messages, as well as the related developer discussions, patterns are being introduced to ensure functional suitability of the system. One good example that captures this motivation is the usage of the Factory pattern for the out-of-the-box codec filters: the Factory method is used to ensure that both encoder and decoder are created for the corresponding codec filter. \\\\
+By correlating the pattern related discussions with the number of occurrences of patterns, we can state that pattern introduction is, most of the times, implicit. For example, the Moderator and Flyweight patterns are the patterns with most current occurrences, however there is no mention about them in the mailing list discussions. At the same time, the patterns that are never mentioned in discussions, are more uncommon; patterns such as Mediator, which is similar to a broker, and Strategy, which enables multiple run time behaviours, are straightforward and can be seen as following from good coding practices.
+\subsection{Why are design patterns removed?}
+Design pattern removals can be explained by 3 causes: resolving functional issues of the code that implements the pattern, extending, updating or improving the code base with new functionalities and, finally, refactorings. These categories have been identified empirically. The 3 causes have a direct impact on the implementation of pattern instances which leads to PINOT capturing the removal. However, as in the case of the Strategy pattern presented, many times the pattern is re-introduced in the form of a new pattern instance which has a more suitable implementation. Refactorings and restructurings of the code base can lead to a permanent removal of the pattern instance.\\\\
+Out of 15 pattern types, 4 pattern types have been completely removed from the code base according to PACITO: the Singleton, CoR, Template and Observer patterns. Most of these patterns have been permanently removed either because the components implemented using the patterns have been permanently removed from MINA, or because a different approach has been pursued for the implementation of the components that used to use design pattern (for example, in the case of the Singleton). This shows that using pattern redundantly or for issues that are not too complex is not a sustainable solution  
+
+\subsection{Are developers discussing design patterns?}
+From our qualitative analysis in section \ref{sec:qualitative_analysis}, it appeared that developers were not discussing in much depth the usage of design patterns, however, a more detailed analysis, showed that more common GoF patterns are actually discussed (see section \ref{sec:malilinglist_analysis}). The discussions are very situation specific, but the developers seem to know how to correlate the problems with the corresponding suitable pattern.\\\\
+Design patterns are at most mentioned in planing  discussions, which shows that the developers do not necessarily have a pattern driven approach to developing the architecture of the MINA system. This explains the high volatility and fast rate of change of the code w.r.t. the pattern instances identified.
+
+\subsection{General remarks and limitations}
+The accuracy of the analysis has been greatly impacted by the quality of the result data. The results provided by PINOT are significantly unreliable and inconsistent at times. Some of the issues that we encountered are related to PINOT incorrectly recovering pattern types, recovering pattern instances only after naming changes or having inconsistencies in tracing the entire pattern evolution (see for example figure \ref{fig:strategy_timeline} which shows a gap in the pattern timeline). We have tried to solve some of the issues during the data pre-processing step, however most of the issues became evident in the final stages of our analysis. Moreover, the lack of prior knowledge that these issues will be occurring limited the possible actions we could have taken to overcome them. These aspects should be considered w.r.t. the accuracy of our analysis.   
+
+\newpage
+\section{Future Work}
+\label{sec:futurework}
+
+The future work related to the project at hand should focus on the improvement of the tools used. Updating the existing tools to produce reliable and consistent results in terms of pattern recovery will also have a significant impact on the accuracy of the corresponding analysis.
+
+\subsection{Tools improvements}
+To facilitate future research, it would be recommended to make further developments to both PACITO and PINOT. PINOT could be improved for better stability, better language support, and more accurate results; while PACITO could benefit from further integrations into third party systems. Ideally, the boundary between the two would fade until they become a single, fully integrated application.
+
+\subsubsection{PINOT}
+For PINOT, the current pattern detection engine is built on the decades-old Java compiler Jikes that is simply incompatible with modern Java code. This causes the analysis to be limited to a very small subset of `simple' Java classes, while patterns are likely to be implemented in classes with higher complexity that are currently not analysed by PINOT. There are roughly three approaches to solving this:
+\begin{itemize}
+    \item {\bf Extend the parser and AST of the underlying Jikes compiler to support newer language features}\\
+    This approach might seem like an easy way to improve the results, but we are not sure whether this is the best approach. Extending the parser and AST might be very complicated, since the basis of it is not prepared for many of the advanced language features (e.g. modules, generics) present in the language today. We deem it likely that this approach will turn out to be very costly.
+    
+    \item {\bf Swap out the current parser and adapt PINOT to work with another parser and AST}\\
+    This approach is in some way a more `thorough' version to the first approach presented above, as it will completely swap out the parser logic from Jikes, allowing for the use of a modern parser supporting all modern features, while retaining the existing pattern detection implementation.
+    
+    However, we deem it unlikely this approach will be successful, as the current pattern detection logic is very tightly integrated with the specifics of the Jikes parser. Throughout the pattern detection, objects straight from the parser are being used without any intermediate representation. This will make it very hard to swap in a new parser, since it would become very hard to make it `fit in' without significant changes to the pattern detection logic. Furthermore, the choice for a new parser would likely be limited to C++ implementations, limiting the scope.
+    
+    In both scenarios above, the users will also still be left with an unstable and low-quality implementation of the pattern detection, which is currently suffering from many memory leaks and random segmentation faults. In our project, we patched some of these issues by simply circumventing the crash, but we did not find nor address the root causes.
+    
+    \item {\bf Re-implement pattern detection logic on top of an existing, open-source parser}\\
+    This approach represents the biggest change in the structure of PINOT and will likely mean a full re-implementation from scratch. However, we deem this the most likely scenario, despite the large amount of work. The main reason is that this allows the maintainers to use a modern parser, and build PINOT in such a way that some kind of standardized intermediate representation is used for the pattern detection. This will decouple parsing and pattern detection in the future. Such a rewrite will also facilitate further integration of PINOT and PACITO.
+\end{itemize}
+
+In all approaches outlined above, a major refactoring of all PINOT code will be essential since the current code base is a mix of various outdated C++ code styles. It is difficult to trace the logic in pattern detection, and there is little documentation. Basic OOP principles are not always followed.
+
+\subsubsection{PACITO}
+Since PACITO received most attention in our project, the future development possible for PACITO is limited. The following could be considered:
+\begin{itemize}
+    \item JIRA/other issue tracking integration
+    \item Analysing a commit tree, rather than a linear set
+    \item Further analysing results and visualising them as well in a dynamic user interface
+    \item Integration with code visualisation tools such as Understand or Structure101
+    \item Integration with other package management solutions such as Gradle
+\end{itemize}

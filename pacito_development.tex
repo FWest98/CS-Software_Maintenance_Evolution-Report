@@ -1,61 +1,62 @@
-\section{Pacito Development}
+\section{PACITO Development}
 \label{sec:pacito_dev}
-This section will describe the improvements and changes made in Pacito, and will also list the difficulties we ran into while testing out the tool and its usability aspects.
 
-\subsection{Integrated Pacito}
-The main development work done so far is the integration of all components (Pinot, shell scripts, tools) into a single Java executable. This single tool has a link to the native C++ code of Pinot, and will receive the pattern results straight into memory. This way, no output parsing is necessary and everything is contained within a single executable. The new approach also allows for multithreading and many more features:
+This section will describe the improvements and changes made in PACITO, and will also list the difficulties we ran into while testing out the tool and its usability aspects.
+
+\subsection{Integrated PACITO}
+The main development work done so far is the integration of all components (PINOT, shell scripts, tools) into a single Java executable. This single tool has a link to the native C++ code of PINOT, and will receive the pattern results straight into memory. This way, no output parsing is necessary and everything is contained within a single executable. The new approach also allows for multithreading and many more features:
 \begin{itemize}
-    \item Multithreading: Pacito supports multithreading with a predefined number of threads. It will distribute the commits to analyse dynamically using a threadpool in Java, and each thread will have its own independent working directory. This provides fully parallel operation, so it is very well scalable. It is possible to fully analyse a branch of Mina in about 10 minutes on 8 cores using 16 threads, without running Maven. This overprovisioning allows more efficient use of CPU capacity while waiting for I/O.
-    \item Use of temporary file system: Pacito will copy the source of the application to a separate working directory, preferably on a {\tt tmpfs} mount, so all file I/O will be done in-memory. This provides significant speed-ups.
-    \item User-friendly command-line interface: Pacito as a tool has a nice command-line interface with many options to customise the behaviour.
-    \item Native integration with Maven: Pacito will integrate straight with Maven and if necessary modify the {\tt pom.xml} files via the API. This ensures that the resulting package download will always succeed and will yield the largest amount of resolved dependencies possible.
-    \item Maven cache: Each runner thread will use its own Maven cache, to save time downloading resources for each commit.
-    \item Native integration with Git: Pacito integrates straight with Git via a third-party library, simplifying the management of the git repository.
-    \item No source file refactoring necessary: Pacito contains a modified version of Pinot that no longer requires refactoring the source code to analyse.
-    \item Dockerized: Pacito can be run in a Docker container, fully hiding all necessary dependencies for the tool to operate.
-    \item Exclude filter: Pacito supports excluding certain directories from the analysis, such as an {\tt examples} directory.
-    \item Cross-commit analysis: The set-up of a single integrated program makes it very easy to make intra-commit analyses of the patterns. The code will match patterns detected in consecutive commits and this way it can make a list of all patterns, including their lifespan (intro and outro commits). This eases the detection of new or removed patterns, simplifying the work for this project.
-    \item JSON output: The new Pacito implemention produces a single JSON file with all pattern information for easy processing.
+    \item Multithreading: PACITO supports multithreading with a predefined number of threads. It will distribute the commits to analyse dynamically using a threadpool in Java, and each thread will have its own independent working directory. This provides fully parallel operation, so it is very well scalable. It is possible to fully analyse a branch of Mina in about 10 minutes on 8 cores using 16 threads, without running Maven. This overprovisioning allows more efficient use of CPU capacity while waiting for I/O.
+    \item Use of temporary file system: PACITO will copy the source of the application to a separate working directory, preferably on a {\tt tmpfs} mount, so all file I/O will be done in-memory. This provides significant speed-ups.
+    \item User-friendly command-line interface: PACITO as a tool has a nice command-line interface with many options to customise the behaviour.
+    \item Native integration with Maven: PACITO will integrate straight with Maven and if necessary modify the {\tt pom.xml} files via the Maven SDK. This ensures that the resulting package download will always succeed and will yield the largest amount of resolved dependencies possible.
+    \item Maven cache: Each runner thread will use its own Maven cache, to save time downloading resources for each commit while preventing race conditions in a shared cache.
+    \item Native integration with Git: PACITO integrates straight with Git via a third-party library, simplifying the management of the git repository.
+    \item No source file changes necessary: PACITO contains a modified version of PINOT that no longer requires changes to the source code to successfully analyse it.
+    \item Dockerized: PACITO can be run in a Docker container, fully hiding all necessary dependencies for the tool to operate.
+    \item Exclude filter: PACITO supports excluding certain directories from the analysis, such as an {\tt examples} directory.
+    \item Cross-commit analysis: The set-up of a single integrated program makes it very easy to make inter-commit analyses of the patterns. The code will match patterns detected in consecutive commits and this way it can make a list of all patterns, including their lifespan (intro and outro commits). This eases the detection of new or removed patterns, simplifying the work for this project.
+    \item JSON output: The new PACITO implemention produces a single JSON file with all pattern information for easy processing.
 \end{itemize}
 
-\subsection{Modified Pinot}
-As mentioned before, Pacito contains a modified version of Pinot, with the following improvements:
+\subsection{Modified PINOT}
+As mentioned before, PACITO contains a modified version of PINOT, with the following improvements:
 \begin{itemize}
-    \item Support for foreach loops: Pinot can now parse most types of foreach loops, yielding considerably more files to be successfully analysed.
-    \item Support for annotations: Pinot can now parse annotations, and will ignore them in further analysis.
-    \item More lenient with generics: Pinot does not support generics, and this will often cause a cascade of issues where the generic types cannot be resolved. However, by assuming the source code to analyse is correct, it is possible to make Pinot less strict in its analysis to allow for more files analysed
-    \item Fewer memory leaks: Pinot has considerably fewer memory leaks
-    \item Redesigned runtime: Pinot has an overhauled public API that better integrates the pattern analysis, and makes use of modern C++ features and design principles.
+    \item Support for foreach loops: PINOT can now parse most types of foreach loops, yielding considerably more files to be successfully analysed.
+    \item Support for annotations: PINOT can now parse annotations, but does not incorporate them in further analysis.
+    \item More lenient generics: PINOT does not support generics, and this will often cause a cascade of issues where the generic types cannot be resolved. However, by assuming the source code to analyse is correct, it is possible to make PINOT less strict in its analysis to allow for more files to be analysed.
+    \item Fewer memory leaks: PINOT has considerably fewer memory leaks
+    \item Redesigned runtime: PINOT has an overhauled public API that better integrates the pattern analysis, and makes use of modern C++ features and design principles.
 \end{itemize}
 
 \subsection{Issues encountered}
 During the development of the above features, a number of issues were encountered (very) often, significantly slowing down proper progress and analysis:
 \begin{itemize}
-    \item Segmentation faults: Pinot is an adapted version of an old open-source Java compiler by IBM: Jikes. This compiler works fine and has memory management done reasonably well, but the changes made by the developer of Pinot make everything into a real tangle where very often freed memory is being accessed again, memory is freed twice, object slicing is happening very often, vtables are being corrupted, etc. Every run for every commit is different, and this makes it very hard to debug. On top of that, due to the use of the Java integration, valgrind is very slow since the Java Virtual Machine is causing literally millions of irrelevant errors.
+    \item Segmentation faults: PINOT is an adapted version of an old open-source Java compiler by IBM: Jikes. This compiler works fine and has memory management done reasonably well, but the changes made by the developer of PINOT make everything into a real tangle where very often freed memory is being accessed again, memory is freed twice, object slicing is happening very often, vtables are being corrupted, etc. Every run for every commit is different, and this makes it very hard to debug. On top of that, due to the use of the Java integration, valgrind is very slow since the Java Virtual Machine is causing literally millions of irrelevant errors.
     
     This all makes the program very hard to debug, especially if you want to keep the memory leaks under control. Over time, we managed to reduce the leak from 20MB per commit to about 300kB, which is much more acceptable.
     
-    \item Maven not being able to resolve dependencies: Most projects consist of multiple modules, where one depends on the other. In order for Pinot (which requires jars all dependencies) to properly work, we want to supply as many dependency jars as possible. For this, we use the Maven Dependency Plugin, that will copy all these .jar files to a separate directory for us. Unfortunately, this plugin requires the project to be built before the cross-project dependencies can be resolved. This is a consequence of the architecture of Maven.
+    \item Maven not being able to resolve dependencies: Most projects consist of multiple modules, where one depends on the other. In order for PINOT (which requires jars all dependencies) to properly work, we want to supply as many dependency jars as possible. For this, we use the Maven Dependency Plugin, that will copy all these .jar files to a separate directory for us. Unfortunately, this plugin requires the project to be built before the cross-project dependencies can be resolved. This is a consequence of the architecture of Maven.
     
-    The original version of Pacito had a tool that would adapt the {\tt pom.xml} files to account for this, but unfortunately, for us it caused a situation where no dependencies could be resolved anymore at all. In the new version, we are using the official Maven API to manipulate the pom files and remove the cross-project dependencies. This allows us to resolve all external dependencies and get their jar files.
+    The original version of PACITO had a tool that would adapt the {\tt pom.xml} files to account for this, but unfortunately, for us it caused a situation where no dependencies could be resolved anymore at all. In the new version, we are using the official Maven SDK to manipulate the pom files and remove the cross-project dependencies. This allows us to resolve all external dependencies and get their jar files.
     
-    \item Pinot not accepting input files. As mentioned before, Pinot is based on the Jikes compiler for which development was discontinued partly through the introduction of JDK5. Consequently, some of the features of JDK5 are implemented, some are not. Luckily, annotations and foreach constructs were already implemented, and we spent some time modifying Pinot to accept these constructs as well.
+    \item PINOT not accepting input files. As mentioned before, PINOT is based on the Jikes compiler for which development was discontinued partly through the introduction of JDK5. Consequently, some of the features of JDK5 are implemented, some are not. Luckily, annotations and foreach constructs were already implemented, and we spent some time modifying PINOT to accept these constructs as well.
     
-    Unfortunately, the lack of support for generics was causing a number of issues. The lexer and parser of the compiler did already support generics, so the program would not crash; the program would only not parse the files in question. In practice, this causes over half of the classes to not be detected. We tried to circumvent these restrictions in Pinot/Jikes by attempting some workaround, but none of them worked properly.
+    The lack of support for generics was one of the main challenges. Fortunately, the lexer and parser of the compiler did already support generics, this prevented Pinot from crashing, it would only not process the files in question. In practice, this causes over half of the classes to not be detected. We tried to circumvent these restrictions in PINOT/Jikes by attempting some workarounds, but none of them worked properly.
     
-    \item Race conditions: After introducing multithreading, a number of race conditions were uncountered. These mainly revovled around the use of global, static variables to maintain the state of pattern analysis in Pinot. Where possible and easy to do so, these static variables were removed and the code was refactored to make it thread-safe, in other cases the problem was alleviated using {\tt thread\_local} statements so that at least the code is thread-safe. However, this does not solve the fundamental issue of a global state, where consecutive runs of Pinot in the same thread might still cause behaviour changes.
+    \item Race conditions: After introducing multithreading, a number of race conditions were encountered. These mainly revolved around the use of global, static variables to maintain the state of pattern analysis in PINOT. Where possible and easy to do so, these static variables were removed and the code was refactored to make it thread-safe; in other cases the problem was alleviated using {\tt thread\_local} statements so that at least the code is thread-safe. However, this does not solve the fundamental issue of a global state, where consecutive runs of PINOT in the same thread might still show different behaviour.
 \end{itemize}
 
 \subsection{Usage Instructions}
-Now follow some usage instructions of the new version of Pacito. There are two ways to run the tool: inside a Docker container (easiest, cross-platform compatible), or native in Linux (more involved setup). Both of these will be discussed. The Docker setup is easiest but is not suitable for debugging and development of the application, and it might be complicated to solve issues, however it will run on every major OS with minimal setup time. The native approach is more convoluted to set up, but is easier to develop and debug. Unfortunately, no pre-built binaries or distributions are provided.
+Now follow some usage instructions of the new version of PACITO. There are two ways to run the tool: inside a Docker container (easiest, cross-platform compatible), or native in Linux (more involved setup). Both of these will be discussed. The Docker setup is easiest but is not suitable for debugging and development of the application, and it might be complicated to solve issues, however it will run on every major OS with minimal setup time. The native approach is more convoluted to set up, but is easier to develop and debug. Unfortunately, no pre-built binaries or distributions are provided.
 
 \subsubsection{Docker}
-For use of the Docker approach, the only prerequisites are Git and Docker installed. This includes full support for macOS (in theory, but not tested), Windows (via Docker for Windows), and of course most Linux distributions. After having cloned the repository of the code to analyse, and after downloading the source for Pacito (no binaries provided), follow these steps. Commands are preceded by a folder indicator, {\tt S>} for the directory of the source code to analyse and {\tt P>} for the directory where Pacito is located (specifically, the folder containing the new implementation with a {\tt Dockerfile} in it).
+For use of the Docker approach, the only prerequisites are Git and Docker installed. This includes full support for macOS (in theory, but not tested), Windows (via Docker for Windows), and of course most Linux distributions. After having cloned the repository of the code to analyse, and after downloading the source for PACITO (no binaries provided), follow these steps. Commands are preceded by a folder indicator, {\tt S>} for the directory of the source code to analyse and {\tt P>} for the directory where PACITO is located (specifically, the folder containing the new implementation with a {\tt Dockerfile} in it).
 \begin{enumerate}[label=\bf\arabic*)]
     \item {\tt P> docker build -t pacito .} \\ This will build the Docker image and compile all code automatically, tagging ({\tt -t}) the resulting image with the name {\tt pacito}.
-    \item {\tt S> docker run --rm -v \$(pwd):/source --tmpfs /wd pacito <OPTIONS>} \\ This will run Pacito on the files in the current directory ({\tt pwd}) with the given options. Without specifying options, the help message of Pacito will be displayed, outlining all options. These can also be found below.
+    \item {\tt S> docker run --rm -v \$(pwd):/source --tmpfs /wd pacito <OPTIONS>} \\ This will run PACITO on the files in the current directory ({\tt pwd}) with the given options. Without specifying options, the help message of PACITO will be displayed, outlining all options. These can also be found below.
     
-    To explain this command: this command will cause {\tt docker} to {\tt run} the image {\tt pacito} containing our application, with the current working directory mounted in {\tt /source} (this is where Pacito will look for source code inside Docker), and with a temporary filesystem mounted at {\tt /wd}. After finishing, the container instance will automatically be removed ({\tt --rm}).
+    To explain this command: this command will cause {\tt docker} to {\tt run} the image {\tt pacito} containing our application, with the current working directory mounted in {\tt /source} (this is where PACITO will look for source code inside Docker), and with a temporary filesystem mounted at {\tt /wd}. After finishing, the container instance will automatically be removed ({\tt --rm}).
 \end{enumerate}
 
 \subsubsection{Native}
@@ -63,45 +64,81 @@ The native approach is more involved, mainly because of the larger set of prereq
 \begin{itemize}
     \item Java 11 - Preferably OpenJDK11 - with a properly set up environment, probably newer versions will work as well
     \item Gradle 6.x - Future version 7+ might not work
-    \item Maven - Only if the respective integration in Pacito is desired.
+    \item Maven - Only if the respective integration in PACITO is desired.
     \item G++ 10 or higher - This version is not yet in most mainline repositories, so this might require setting up extra repositories for your package manager
     \item Git
-    \item Linux-based operating system - The original Pinot distribution had a configuration API to detect platform-specific features, in the integrated version this is now omitted. This might cause some incompatibilities with specific distributions, expect the best results on Ubuntu distributions.
+    \item Linux-based operating system - The original PINOT distribution had a configuration API to detect platform-specific features, in the integrated version this is now omitted. This might cause some incompatibilities with specific distributions, expect the best results on Ubuntu distributions.
 \end{itemize}
 
-After having cloned the repository of the code to analyse, and after downloading the source for Pacito (no binaries provided), follow these steps. Commands are preceded by a folder indicator, {\tt S>} for the directory of the source code to analyse and {\tt P>} for the directory where Pacito is located (specifically, the folder containing the new implementation with a {\tt settings.gradle.kts} file in it).
+After having cloned the repository of the code to analyse, and after downloading the source for PACITO (no binaries provided), follow these steps. Commands are preceded by a folder indicator, {\tt S>} for the directory of the source code to analyse and {\tt P>} for the directory where PACITO is located (specifically, the folder containing the new implementation with a {\tt settings.gradle.kts} file in it).
 \begin{enumerate}[label=\bf\arabic*)]
     \item {\tt P> gradle fatJar} \\ This will first compile the Java code, then build the C++ code with the generated Java headers, and then package everything into a single (fat) jar.
-    \item {\tt S> java -jar <path-to-pacito>/app/build/libs/app.jar --source=. <OPTIONS>} \\ This will run Pacito for the code in the current directory, using all cores, analysing all commits in the currently checked-out branch.
+    \item {\tt S> java -jar <path-to-pacito>/app/build/libs/app.jar --source=. <OPTIONS>} \\ This will run PACITO for the code in the current directory, using all cores, analysing all commits in the currently checked-out branch.
 \end{enumerate}
 
-Alternatively, you could run {\tt P> gradle run} to build and run Pacito directly, but then no single distributable jar is built.
+Alternatively, you could run {\tt P> gradle run} to build and run PACITO directly, but then no single distributable jar is built.
 
 \subsubsection{Runtime Options}
-The interface for Pacito is slightly different depending on whether the program is running inside a Docker container or not. The format of the command line is as follows:\\
+The interface for PACITO is slightly different depending on whether the program is running inside a Docker container or not. The format of the command line is as follows:\\
 Docker: {\tt docker run <..> pacito <BRANCH> <OPTIONS>} where {\tt BRANCH} is the name of the branch to analyse and is a required parameter\\
-Native: {\tt java -jar <..> --source=<SOURCE> <OPTIONS>} - here the source directory specification is required, and the branch is an optional argument that default to whatever the current branch of the source might be.
+Native: {\tt java -jar <..> --source=<SOURCE> <OPTIONS>} - here the source directory specification is required, and the branch is an optional argument that defaults to whatever the current branch of the source might be.
 
 Now follows a list of options:
 \begin{description}[font=\tt]
 \item[-s, --source] {\bf (Only native, required)} The directory containing the source code to analyse. On Docker, this is set to {\tt /source} where you will mount the code yourself.
-\item[-b, --branch] {\bf (Only native)} The branch to analyse, defaults to `{\tt\@}' which is the current branch of the source directory
+\item[-b, --branch] {\bf (Only native)} The branch to analyse, defaults to `{\tt @}' which is the current branch of the source directory
 \item[--start] The name or index of the first commit to analyse, inclusive. Accepts a commit checksum or number. Defaults to the first commit of the specified branch.
 \item[--end] The name or index of the last commit to analyse, inclusive. Accepts a commit checksum or number. Defaults to the most recent commit of the specified branch.
-\item[--exclude] A glob pattern of files/folders to exclude from analyses. For example, an {\tt examples} directory.
+\item[--exclude] A glob pattern of files/folders to exclude from analysis. For example, an {\tt examples} directory would be excluded as {\tt --exclude=**example**}.
 \item[-o, --output] Path of the output file where results are stored. Defaults to {\tt pacito.out} in the source code directory. The path can be absolute (not recommended in Docker), or relative to the source directory.
 \item[-n, --threads] The number of threads to use, defaults to 0 which is to use all available cores.
-\item[-wd, --working-dir] {\bf (Only native)} The working directory of Pacito, defaults to {\tt /tmp}. Recommended to have this folder on an in-memory file system for performance. On Docker, this defaults to {\tt /wd} which you should bind to a {\tt tmpfs}.
+\item[-wd, --working-dir] {\bf (Only native)} The working directory of PACITO, defaults to {\tt /tmp}. Recommended to have this folder on an in-memory file system for performance. On Docker, this defaults to {\tt /wd} which you should bind to a {\tt tmpfs}.
 \item[--do-mvn, --no-do-mvn] Whether to include Maven downloads, default to no.
-\item[--mvn] The path to a Maven executable. By default, Pacito looks in PATH.
+\item[--mvn] The path to a Maven executable. By default, PACITO looks in PATH.
 \item[-h, --help] Show the help message
 \item[-v] Whether to print verbose output
 \end{description}
 
-\subsection{Implementation details}
-In this section follow some interesting details about the implementation of this version of Pacito.
+\subsubsection{Sample Output}
+The output in the file specified using {\tt --output} will be a JSON list of detected pattern instances and their respective lifespan information. As an example:
 
-\subsubsection{Integration Java and C++ code}
+\begin{jsonlong}
+[
+    {
+        "patternName": "Facade",
+        "pattern": {
+            "file": "./core/src/main/java/org/apache/mina/filter/codec/ProtocolCodecFilter.java",
+            "access": ["ProtocolCodecFilter"],
+            "hidden": [
+                "IoFilterChain",
+                "ProtocolDecoder",
+                "ProtocolEncoder",
+                "SimpleProtocolEncoderOutput",
+                "BaseIoSession",
+                "IoSession",
+                "ProtocolCodecFactory"
+            ],
+            "facade": "ProtocolCodecFilter"
+        },
+        "lifespan": 42,
+        "introCommitName": "6ce522c49c69d04dee192b1ca39126af0be24764",
+        "introCommitNumber": 310,
+        "introCommitMessage": "Fixed issue: DIRMINA-265 (messageSent event is fired multiple times if ProrotocolEncoder calls ProtocolEncoderOutput.write() multiple times for one message.)\n* Made sure that MessageByteBuffer is sent only once.\n\ngit-svn-id: https://svn.apache.org/repos/asf/directory/trunks/mina@446591 13f79535-47bb-0310-9956-ffa450edef68\n",
+        "outroCommitNumber": 351,
+        "outroCommitName": "a8c1e6218ae458c85665a3c054d9b1d04343f6fa",
+        "outroCommitMessage": "Fixed issue: DIRMINA-273 Session created with non-existent service\nFixed issue: DIRMINA-283 Filter.sessionCreated/Filter.sessionOpened called AFTER Filter.filterWrite...\n* Added AbstractIoFilterChain.CONNECT_FUTURE attribute key to store the connect future until the future becomes now.\n* AbstractIoFilterChain.fireSessionOpened() and fireExceptionCaught() take care of finishing the ConnectFuture attached to sessions.\n* Made sure the behavior of ConnectFuture and IoFilterChain is all identical for all transports\n\n\n\ngit-svn-id: https://svn.apache.org/repos/asf/directory/trunks/mina@464824 13f79535-47bb-0310-9956-ffa450edef68\n"
+    },
+]
+\end{jsonlong}
+
+The \texttt{introCommit} and \texttt{outroCommit} fields identify the moments in the commit history when the pattern instance has first and, respectively, last been observed. Therefore, these are the commits in which the pattern was introduced, or the one \textbf{before} it was removed. The \texttt{lifespan} field represents the `life span' of the pattern instance, expressed in number of commits (i.e. from the instance's introduction until its removal). If the outro commit matches the final commit specified in the analysis (the most recent one, or the one specified with {\tt --end}), then the pattern instance is still current (i.e. still present in the latest version of the code base). {\bf Note} that the {\tt outroCommit} is the last commit in which the pattern was still present. Therefore, the pattern was only removed in the following commit.
+
+The schema of the {\tt pattern} field will be dependent on the pattern type as provided in {\tt patternName}. The full list of all fields and their interpretation per pattern type can be found in {\tt Patterns.h} in the source code, as it would be too long to detail here. Generally, information about the pattern instance's code scope is presented (i.e. the  files in the code base that are related to the pattern instance's implementation).
+
+\subsection{Implementation Details}
+In this section follow some interesting details about the implementation of this version of PACITO.
+
+\subsubsection{Integration Java and C++ Code}
 The integration between the Java code inside a JVM (Java Virtual Machine) and native C++ code is not a trivial one. This is accomplished using JNI (Java Native Interface), which allows a developer to use native libraries inside the JVM. JNI allows a developer to mark some methods in a class as {\tt native}, which indicates to the JVM that these are implemented in native code. Upon compilation of the Java code, a C(++) header file will be generated with the exact signatures of the methods to implement in the native code. The implemented code will be compiled to a library, which should then be loaded back into Java.
 
 \begin{javalong}
@@ -140,7 +177,7 @@ jfieldID getPointerField(JNIEnv *env, jobject obj) {
     auto cls = env->GetObjectClass(obj);
     if(cls == nullptr) return;
     
-    auto fieldId = env->GetFieldID(cls, "fooObjPtr", "J"); // "J" is some type representation of a long
+    auto fieldId = env->GetFieldID(cls, "fooObjPtr", "J"); // "J" represents a long
     return fieldId;
 }
 
@@ -164,7 +201,9 @@ JNIEXPORT void JNICALL Java_NativeCode_FooUse(JNIEnv *env, jobject thisObj) {
 
 Even in this short and simple example, the amount of boilerplate code quickly grows. This is one of the major downsides of using JNI, as every single operation must happen very explicitly. Also refactoring of Java code is a complicated task that quickly breaks many aspects of the integration and must be done with caution.
 
-Another challenge with using JNI is the limited support by various build tools. In our choice to use Gradle, it took quite some time getting both native and Java code properly combined as JNI is not supported out-of-the-box. In the end, a set of custom export configurations and artifacts was used to share the headers from Java to C++ and share the compiled library back from C++ to Java for it to be included in the jar. Typically, the C++ code is shipped as a library with a public interface, and the Java project will contain both all Java code and the C++ integration code (mapping the C++ public interface to Java objects and back). In this case, all code was included in the C++ integration code. This was easier to handle with Gradle, but provides less strict separation of concerns between modules.
+Another challenge with using JNI is the limited support by various build tools. In our choice to use Gradle, it took quite some time getting both native and Java code properly combined, since JNI is not supported out-of-the-box. In the end, a set of custom export configurations and artifacts was used to share the headers from Java to C++ and share the compiled library back from C++ to Java for it to be included in the jar.
+
+In typical JNI projects, the C++ code is shipped as a library with a public interface, while the Java project will contain both the Java code and the C++ integration code (mapping the C++ public interface to Java objects and back). In our case, the C++ integration code was included in the library module instead. This was easier to handle with Gradle, but provides less strict separation of concerns between modules.
 
 \begin{kotlinlong*}{label=\rm Gradle configuration for C++ project to include Java-generated header files}
 // Add JNI Headers configuration for import of the generated headers from Java
@@ -193,7 +232,7 @@ val jniHeaders: Configuration by configurations.creating {
 \subsubsection{Conversion of C++ Pattern types to Java alternatives}
 As described above, the interoperability between C++ and Java can be quite cumbersome. For most common operations (creating an object, setting properties of a known type), helper functions were defined that allow for easier programming without risk of introducing bugs.
 
-We want to highlight one conversion in more detail, the conversion of a list of symbols to a list of strings in Java. The issue at hand is that some patterns have a property containing a list of types, list of files, list of variables, etc. In Pinot, these are all subclasses of {\tt Symbol}, such that these are lists of Symbols. Unfortunately, a symbol does not specify some kind of {\tt toString} method, such that it is difficult to write a single helper function that could convert any list of symbols to a list of strings. Instead we had to resort to more exotic templating mechanisms, only recently implemented in G++ version 10.
+We want to highlight one conversion in more detail, the conversion of a list of symbols to a list of strings in Java. The issue at hand is that some patterns have a property containing a list of types, list of files, list of variables, etc. In PINOT, these are all subclasses of {\tt Symbol}, such that these are lists of Symbols. Unfortunately, the parent {\tt Symbol} type does not specify some kind of {\tt toString} method, just a few of the subclasses do. Therefore, it is not possible to write a single helper function that could convert any list of symbols to a list of strings. Instead, we had to resort to more exotic templating mechanisms, only recently implemented in G++ version 10.
 
 In this case, we are using concepts to make a generic helper function that allows for conversion of a list of objects to a list of strings, only of those objects have a {\tt ToString} function returning a {\tt const char *}:
 \begin{cpplong}

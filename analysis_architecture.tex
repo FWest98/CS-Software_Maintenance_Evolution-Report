@@ -1,12 +1,13 @@
 \section{System Analysis: architectural components}
 \label{sec:analysis_components}
+
 In this section, we present our investigation into the architecture of the MINA framework. The main focus is to comprehend the structure of the architecture, the dependencies between components and their responsibilities. 
 \subsection{Analysis steps}
 For conducting this analysis, we investigate the source code \cite{mina-github}, the API documentation \cite{mina-reference} and use the Structure101 tool \cite{structure101} to obtain a clear view of the architecture.\\\\
 The first step is importing the MINA project intro Structure101. For clarity and aiding reproducibility, we specify the steps:
 \begin{enumerate}
     \item Download latest stable version of MINA, for this report we use version 2.1.3.
-    \item Install MINA using command \texttt{MVN CLEAN INSTALL -DSKIPTESTS}
+    \item Install MINA using command \texttt{mvn clean install -Dskiptests}
     \item Import MINA as a Maven project in Structure101 through the root pom file.
 \end{enumerate}
 Having the Structure101 project, we analyze the architecture at a high-level of abstraction; we show how the packages interact and if any patterns are captured by the high-level architecture. This information is presented in section \ref{sec:archi_overview}.\\\\
@@ -20,7 +21,7 @@ Following the general overview, each package is individually analysed in section
     \item Identified patterns
     
 \end{itemize}
-Finally, we consider one use case of MINA and analyse it from an architectural point of view: how do the architecturally components interact with each other in order to fulfill the functionality of the use case? The use case presents the construction of a MINA server. We will also present the corresponding JAVA implementation.
+Finally, we consider one use case of MINA and analyse it from an architectural point of view: how do the architectural components interact with each other in order to fulfill the functionality of the use case? The use case presents the construction of a MINA server. We will also present the corresponding JAVA implementation.
 
 
 \subsection{High-level overview of the architecture}
@@ -31,7 +32,7 @@ An account of the high-level architecture structure is presented in figure \ref{
     \item \texttt{mina-integration-xbean}
     \item \texttt{mina-integration-ognl}
     \item \texttt{mina-integration-beans}
-    \item \texttt{mina-filter-compression}: the implementation of a \texttt{IOFilter} which compresses all data using \texttt{JZlib}\cite{jzlib}.
+    \item \texttt{mina-filter-compression}: the implementation of a \texttt{IOFilter} which compresses all data using \texttt{JZlib} \cite{jzlib}.
     \item \texttt{mina-http}: implementation of \texttt{http} communication using MINA; exposes an API for MINA applications using the \texttt{http} protocol.
     \item \texttt{mina-statemachine}: offers support for complex applications that would like to implement object state-based behaviour; \texttt{mina-statemachine} implements a improved reinterpretation of the State pattern \cite{state_pattern}.
     \item \texttt{mina-transport-apr}: provides support for APR (Apache Portable Runtime)\cite{apr} transport.
@@ -62,7 +63,7 @@ After the proposed restructuring, the responsibilities of the main modules can b
     \item Additional or advanced functionality which extends the core:  \texttt{mina-http}, \texttt{mina-statemachine}
     \item Third-party integration: \texttt{mina-integration}
 \end{enumerate}
-In this report, we will emphasize the investigation of the core architecture, in other words, we will focus predominantly on the \texttt{mina-core} module. We expect this module to follow the architectural schema presented in figure \ref{fig:architecture}, since it captures the underlying structure of MINA based applications. This entails that the core module implements the transport layer (i.e. connection to the remote peer as presented in figure \ref{fig:architecture}), the IO service layer, the filters (i.e. IOFilterChain layer in \ref{fig:architecture})  which process the IO and the business logic layer (i.e. IOHandler in figure  \ref{fig:architecture}, a this level the user is able to implement their own logic), all of these components being presided by a session. Keeping in mind the goal of the report at hand, we can already guess the usage of the Layers pattern \cite{archi_patterns}. \\\\
+In this report, we will emphasize the investigation of the core architecture, in other words, we will focus predominantly on the \texttt{mina-core} module. We expect this module to follow the architectural schema presented in figure \ref{fig:architecture}, since it captures the underlying structure of MINA based applications. This entails that the core module implements the transport layer (i.e. connection to the remote peer as presented in figure \ref{fig:architecture}), the IO service layer, the filters (i.e. IOFilterChain layer in \ref{fig:architecture})  which process the IO and the business logic layer (i.e. IOHandler in figure  \ref{fig:architecture}, at this level the user is able to implement their own logic), all of these components being presided by a session. Keeping in mind the goal of the report at hand, we can already guess the usage of the Layers pattern \cite{archi_patterns}. \\\\
 Other remarks regarding the high-level architecture related to the proposed restructuring. Our decision of clustering the integration packages is based on the top-down dependencies between the integration packages as shown in figure \ref{fig:dependencies_integration} in the Appendix, as well as on their serving a common purpose: integration with a third-party entity. The \texttt{mina-filter-compression} has been moved to the core module and grouped together with the useful filter implementations provided by MINA. For the case of the remaining modules that provide additional functionality, we decided to keep the structure proposed by the MINA development team since they serve different purposes and they create more dependencies if included in the core. Their only commonality is that they have been added to extend or optimize the core functionality. Their addition is also fairly new, they have been introduced in version 2.0 (for reference, we analyze Mina version 2.1.3).
 
 \subsection{Component analysis}

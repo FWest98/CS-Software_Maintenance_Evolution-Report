@@ -1,4 +1,6 @@
 \documentclass[a4paper, 10pt]{article}
+
+\usepackage{etoc}
 \usepackage{a4wide}
 \usepackage[utf8]{luainputenc}
 \usepackage[english]{babel}
@@ -59,6 +61,7 @@
 
 %\setsansfont{Segoe UI}
 \newfontfamily{\cascadia}{Cascadia Mono}[NFSSFamily=Cascadia]
+\setmonofont{Cascadia Mono}[Scale=0.9]
 \renewcommand{\theFancyVerbLine}{\sffamily\textcolor[rgb]{0.5,0.5,0.5}{\scriptsize\arabic{FancyVerbLine}}}
 \usemintedstyle{vs}
 \renewcommand{\listingscaption}{Code sample}
@@ -73,7 +76,6 @@
 	breaklines,
 	breakautoindent = true,
 	bgcolor = white,
-	fontfamily = Cascadia,
 	fontsize = \fontsize{8pt}{12pt}
 }
 
@@ -91,6 +93,19 @@
 }
 
 \newminted[cpplong]{C++}{
+	linenos,
+	frame = lines,
+	framesep = 3mm,
+	breaklines,
+	breakautoindent = true,
+	fontsize = \fontsize{8pt}{10.5pt},
+	tabsize = 4,
+	bgcolor = white,
+	mathescape = true,
+	texcomments = true
+}
+
+\newminted[jsonlong]{JSON}{
 	linenos,
 	frame = lines,
 	framesep = 3mm,
@@ -186,6 +201,8 @@
 \input{pacito_development}
 \newpage
 \input{patterns_analysis}
+\newpage
+\input{conclusions-futurework}
 
 \newpage
 \addcontentsline{toc}{section}{References}
@@ -197,6 +214,10 @@
 
 \begin{appendices}
 \input{figures}
+\newpage
+\input{quantitative_analysis_figures}
+\newpage
+\input{strategy_motivation}
 \newpage
 \input{changelog}
 \end{appendices}
